@@ -1,0 +1,45 @@
+{
+	"magic": {
+		"magic": "packageinfo",
+		"version": 2
+	},
+	"meta": {
+		"authors": [
+			{
+				"email": "pubsrc@binary-overflow.de",
+				"name": "J\u00fcrgen Knauth"
+			}
+		],
+		"description": "This python module provides parser and validator for JSON files and data structures. The JSON parser is designed as a drop-in replacement for the built in python JSON parser as this parser here supports using comments in JSON files (which in some use cases is very a very handy feature).",
+		"development_status": "stable",
+		"keywords": [
+			"json",
+			"parsing",
+			"schema"
+		],
+		"language": "python3",
+		"license": "Apache2",
+		"name": "jk_jsonmodel",
+		"packageClass": "python-module",
+		"version": "0.2023.2.20"
+	},
+	"requirements": {
+		"htmlcssjs_packages": [],
+		"python_packages": [
+			"jk_json",
+			"jk_prettyprintobj"
+		],
+		"python_packages_dev": [
+			"jk_testing"
+		],
+		"python_packages_recommended": [],
+		"system_apt_packages": []
+	},
+	"source": {
+		"extra_binary_files": [],
+		"extra_data_files": [],
+		"packages": [
+			"jk_jsonmodel"
+		]
+	}
+}

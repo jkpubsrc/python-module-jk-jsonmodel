@@ -1,0 +1,13 @@
+{
+	"name": "John",
+	"surename": "Doe",
+	"birthday": {
+		"month": 5,
+		"day": 23
+	},
+	"phoneNumbers": {
+		"home": "+39 123 45678",
+		"office": null,
+		"cell": "+39 234 56789"
+	}
+}

@@ -1,0 +1,11 @@
+﻿src/dist/
+src/build/
+src/*.egg-info/
+**/__pycache__/
+.svn/
+.vscode
+examples/*.log
+src/**/OLD/
+src/**/*_old/
+src/**/*_OLD/
+**/*.bak
