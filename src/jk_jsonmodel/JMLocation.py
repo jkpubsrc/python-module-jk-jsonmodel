@@ -18,5 +18,12 @@ class JMLocation(typing.NamedTuple):
 		return cls(sourceID, lineNo, charPos, jsonPath)
 	#
 
+	def __str__(self) -> str:
+		if self.sourceID:
+			return "{}:{}:{}".format(self.sourceID, self.lineNo + 1, self.charPos + 1)
+		else:
+			return "{}:{}".format(self.lineNo + 1, self.charPos + 1)
+	#
+
 #
 

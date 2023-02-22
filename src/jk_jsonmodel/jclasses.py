@@ -8,6 +8,8 @@ import jk_prettyprintobj
 
 
 from .JMLocation import JMLocation
+from .AbstractConstraint import AbstractConstraint, _packConstraints
+
 
 
 
@@ -31,13 +33,19 @@ class AbstractJMElement(jk_prettyprintobj.DumpMixin):
 	## Constructor
 	################################################################################################################################
 
+	def __init__(self, location:JMLocation) -> None:
+		assert isinstance(location, JMLocation)
+
+		self._location = location
+	#
+
 	################################################################################################################################
 	## Public Properties
 	################################################################################################################################
 
 	@property
 	def location(self) -> JMLocation:
-		raise NotImplementedError()
+		return self._location
 	#
 
 	################################################################################################################################
@@ -46,6 +54,70 @@ class AbstractJMElement(jk_prettyprintobj.DumpMixin):
 
 	def _dumpVarNames(self) -> typing.List[str]:
 		raise NotImplementedError()
+	#
+
+	def _buildErrorTypeMismatch(self, typeStr:str) -> Exception:
+		assert isinstance(typeStr, str)
+
+		if typeStr[0] in "aeiou":
+			typeStr = "an " + typeStr
+		else:
+			typeStr = "a " + typeStr
+
+		return Exception("Expecting value at {} to be {} ({})".format(
+			repr(self._location.jsonPath),
+			typeStr,
+			str(self._location),
+		))
+	#
+
+	def _buildConstraintViolation(self, constraintText:str) -> Exception:
+		assert isinstance(constraintText, str)
+
+		return Exception("Expecting value at {} to match: {} ({})".format(
+			repr(self._location.jsonPath),
+			constraintText,
+			str(self._location),
+		))
+	#
+
+	def _buildConstraintViolationIndexed(self, i:int, constraintText:str) -> Exception:
+		assert isinstance(i, int)
+		assert isinstance(constraintText, str)
+
+		return Exception("Expecting value at {}[{}] to match: {} ({})".format(
+			repr(self._location.jsonPath),
+			i,
+			constraintText,
+			str(self._location),
+		))
+	#
+
+	def _buildErrorTypeMismatchIndexed(self, i:int, typeStr:str) -> Exception:
+		assert isinstance(i, int)
+		assert isinstance(typeStr, str)
+
+		if typeStr[0] in "aeiou":
+			typeStr = "an " + typeStr
+		else:
+			typeStr = "a " + typeStr
+
+		return Exception("Expecting value at {}[{}] to be {} ({})".format(
+			repr(self._location.jsonPath),
+			i,
+			typeStr,
+			str(self._location),
+		))
+	#
+
+	def _buildErrorMissingKey(self, key:str) -> Exception:
+		assert isinstance(key, str)
+
+		return Exception("Expecting key {} at {} ({})".format(
+			repr(key),
+			self._location.jsonPath,
+			str(self._location),
+		))
 	#
 
 	################################################################################################################################
@@ -84,7 +156,7 @@ class JMValue(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 			data:typing.Union[int,str,bool,float,None] = None,
 		):
 
-		self._location = location
+		super().__init__(location)
 
 		self._data = data
 	#
@@ -92,11 +164,6 @@ class JMValue(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 	################################################################################################################################
 	## Public Properties
 	################################################################################################################################
-
-	@property
-	def location(self) -> JMLocation:
-		return self._location
-	#
 
 	@property
 	def data(self):
@@ -112,21 +179,6 @@ class JMValue(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 			"location",
 			"data",
 		]
-	#
-
-	def _buildErrorTypeMismatch(self, typeStr:str) -> Exception:
-		if typeStr[0] in "aeiou":
-			typeStr = "an " + typeStr
-		else:
-			typeStr = "a " + typeStr
-
-		return Exception("Expecting value at {} to be {} ({}:{}:{})".format(
-			repr(self._location.jsonPath),
-			typeStr,
-			self._location.sourceID,
-			self._location.lineNo,
-			self._location.charPos
-		))
 	#
 
 	################################################################################################################################
@@ -157,72 +209,194 @@ class JMValue(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 
 	# --------------------------------------------------------------------------------------------------------------------------------
 
-	def vIntN(self) -> typing.Union[int,None]:
-		if (self._data is None) or isinstance(self._data, int):
-			return self._data
+	def vIntN(self,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> typing.Union[int,None]:
+		if self._data is None:
+			return None
+		if constraints:
+			constraints = _packConstraints(constraints)
+		if constraints:
+			if isinstance(self._data, int):
+				errMsg = constraints(self._data)
+				if errMsg:
+					raise self._buildConstraintViolation(errMsg)
+				return self._data
+		else:
+			if isinstance(self._data, int):
+				return self._data
 		raise self._buildErrorTypeMismatch("integer")
 	#
 
-	def vIntE(self) -> int:
-		if (self._data is None) or (not isinstance(self._data, int)):
+	def vIntE(self,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> int:
+		if self._data is None:
 			raise self._buildErrorTypeMismatch("integer")
-		return self._data
+		if constraints:
+			constraints = _packConstraints(constraints)
+		if constraints:
+			if isinstance(self._data, int):
+				errMsg = constraints(self._data)
+				if errMsg:
+					raise self._buildConstraintViolation(errMsg)
+				return self._data
+		else:
+			if isinstance(self._data, int):
+				return self._data
+		raise self._buildErrorTypeMismatch("integer")
 	#
 
 	# --------------------------------------------------------------------------------------------------------------------------------
 
-	def vFloatN(self) -> typing.Union[float,None]:
-		if (self._data is None) or isinstance(self._data, float):
-			return self._data
+	def vFloatN(self,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> typing.Union[float,None]:
+		if self._data is None:
+			return None
+		if constraints:
+			constraints = _packConstraints(constraints)
+		if constraints:
+			if isinstance(self._data, float):
+				errMsg = constraints(self._data)
+				if errMsg:
+					raise self._buildConstraintViolation(errMsg)
+				return self._data
+		else:
+			if isinstance(self._data, float):
+				return self._data
 		raise self._buildErrorTypeMismatch("float")
 	#
 
-	def vFloatE(self) -> float:
-		if (self._data is None) or (not isinstance(self._data, float)):
+	def vFloatE(self,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> float:
+		if self._data is None:
 			raise self._buildErrorTypeMismatch("float")
-		return self._data
+		if constraints:
+			constraints = _packConstraints(constraints)
+		if constraints:
+			if isinstance(self._data, float):
+				errMsg = constraints(self._data)
+				if errMsg:
+					raise self._buildConstraintViolation(errMsg)
+				return self._data
+		else:
+			if isinstance(self._data, float):
+				return self._data
+		raise self._buildErrorTypeMismatch("float")
+	#
+
+	# --------------------------------------------------------------------------------------------------------------------------------
+
+	def vNumericN(self,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> typing.Union[float,int,None]:
+		if self._data is None:
+			return None
+		if constraints:
+			constraints = _packConstraints(constraints)
+		if constraints:
+			if isinstance(self._data, (int, float)):
+				errMsg = constraints(self._data)
+				if errMsg:
+					raise self._buildConstraintViolation(errMsg)
+				return self._data
+		else:
+			if isinstance(self._data, (int, float)):
+				return self._data
+		raise self._buildErrorTypeMismatch("numeric")
+	#
+
+	def vNumericE(self,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> typing.Union[float,int]:
+		if self._data is None:
+			raise self._buildErrorTypeMismatch("numeric")
+		if constraints:
+			constraints = _packConstraints(constraints)
+		if constraints:
+			if isinstance(self._data, (int, float)):
+				errMsg = constraints(self._data)
+				if errMsg:
+					raise self._buildConstraintViolation(errMsg)
+			return self._data
+		else:
+			if isinstance(self._data, (int, float)):
+				return self._data
+		raise self._buildErrorTypeMismatch("numeric")
 	#
 
 	# --------------------------------------------------------------------------------------------------------------------------------
 
 	def vBoolN(self) -> typing.Union[bool,None]:
-		if (self._data is None) or isinstance(self._data, bool):
+		if self._data is None:
+			return None
+		if isinstance(self._data, bool):
 			return self._data
 		raise self._buildErrorTypeMismatch("boolean")
 	#
 
 	def vBoolE(self) -> bool:
-		if (self._data is None) or (not isinstance(self._data, bool)):
+		if self._data is None:
 			raise self._buildErrorTypeMismatch("boolean")
-		return self._data
+		if isinstance(self._data, bool):
+			return self._data
+		raise self._buildErrorTypeMismatch("boolean")
 	#
 
 	# --------------------------------------------------------------------------------------------------------------------------------
 
-	def vStrN(self) -> typing.Union[str,None]:
-		if (self._data is None) or isinstance(self._data, str):
-			return self._data
+	def vStrN(self,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> typing.Union[str,None]:
+		if self._data is None:
+			return None
+		if constraints:
+			constraints = _packConstraints(constraints)
+		if constraints:
+			if isinstance(self._data, str):
+				errMsg = constraints(self._data)
+				if errMsg:
+					raise self._buildConstraintViolation(errMsg)
+				return self._data
+		else:
+			if isinstance(self._data, str):
+				return self._data
 		raise self._buildErrorTypeMismatch("string")
 	#
 
-	def vStrE(self) -> str:
-		if (self._data is None) or (not isinstance(self._data, str)):
+	def vStrE(self,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> str:
+		if self._data is None:
 			raise self._buildErrorTypeMismatch("string")
-		return self._data
+		if constraints:
+			constraints = _packConstraints(constraints)
+		if constraints:
+			if isinstance(self._data, str):
+				errMsg = constraints(self._data)
+				if errMsg:
+					raise self._buildConstraintViolation(errMsg)
+				return self._data
+		else:
+			if isinstance(self._data, str):
+				return self._data
+		raise self._buildErrorTypeMismatch("string")
 	#
 
 	# --------------------------------------------------------------------------------------------------------------------------------
 
-	def vPimitiveN(self) -> typing.Union[str,int,float,bool,None]:
-		if (self._data is None) or isinstance(self._data, (int,float,bool,str)):
-			return self._data
-		raise self._buildErrorTypeMismatch("primitive")
+	def vPimitiveN(self,
+		) -> typing.Union[str,int,float,bool,None]:
+		return self._data
 	#
 
-	def vPimitiveE(self) -> typing.Union[str,int,float,bool]:
-		if (self._data is not None) and isinstance(self._data, (int,float,bool,str)):
-			return self._data
-		raise self._buildErrorTypeMismatch("primitive")
+	def vPimitiveE(self,
+		) -> typing.Union[str,int,float,bool]:
+		if self._data is None:
+			raise self._buildErrorTypeMismatch("primitive")
+		return self._data
 	#
 
 #
@@ -232,7 +406,7 @@ class JMValue(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 #
 # This class is used internally only.
 #
-class _JMProperty(jk_prettyprintobj.DumpMixin):
+class _JMProperty(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 
 	################################################################################################################################
 	## Constructor
@@ -244,10 +418,12 @@ class _JMProperty(jk_prettyprintobj.DumpMixin):
 	def __init__(self,
 			location:JMLocation,
 			key:str,
-			value,
+			value:AbstractJMElement,
 		):
 
-		self._location = location
+		super().__init__(location)
+		assert isinstance(key, str)
+		assert isinstance(value, AbstractJMElement)
 
 		self._key = key
 		self._data = value
@@ -256,11 +432,6 @@ class _JMProperty(jk_prettyprintobj.DumpMixin):
 	################################################################################################################################
 	## Public Properties
 	################################################################################################################################
-
-	@property
-	def location(self) -> JMLocation:
-		return self._location
-	#
 
 	@property
 	def data(self):
@@ -284,173 +455,164 @@ class _JMProperty(jk_prettyprintobj.DumpMixin):
 		]
 	#
 
-	def _buildErrorTypeMismatch(self, typeStr:str) -> Exception:
-		if typeStr[0] in "aeiou":
-			typeStr = "an " + typeStr
-		else:
-			typeStr = "a " + typeStr
-
-		return Exception("Expecting value at {} to be {} ({}:{}:{})".format(
-			repr(self._location.jsonPath),
-			typeStr,
-			self._location.sourceID,
-			self._location.lineNo,
-			self._location.charPos
-		))
-	#
-
 	################################################################################################################################
 	## Public Methods
 	################################################################################################################################
 
 	def vDictE(self) -> JMDict:
-		if (self._data is None) or (self._data.__class__.__name__ != "JMDict"):
-			raise self._buildErrorTypeMismatch("object")
-		return self._data
+		if isinstance(self._data, JMDict):
+			return self._data
+		raise self._data._buildErrorTypeMismatch("object")
 	#
 
 	def vDictN(self) -> typing.Union[JMDict,None]:
-		if self._data is None:
-			return None
-		if self._data._data is None:
-			return None
-		if self._data.__class__.__name__ != "JMDict":
-			raise self._buildErrorTypeMismatch("object")
-		return self._data
+		if isinstance(self._data, JMDict):
+			return self._data
+		if isinstance(self._data, JMValue):
+			if self._data._data is None:
+				return None
+		raise self._data._buildErrorTypeMismatch("object")
 	#
 
 	# --------------------------------------------------------------------------------------------------------------------------------
 
 	def vListE(self) -> typing.Union[JMList,None]:
-		if (self._data is None) or (self._data.__class__.__name__ != "JMList"):
-			raise self._buildErrorTypeMismatch("list")
-		return self._data
+		if isinstance(self._data, JMList):
+			return self._data
+		raise self._data._buildErrorTypeMismatch("list")
 	#
 
 	def vListN(self) -> typing.Union[JMList,None]:
-		if self._data is None:
-			return None
-		if self._data._data is None:
-			return None
-		if self._data.__class__.__name__ != "JMList":
-			raise self._buildErrorTypeMismatch("list")
-		return self._data
+		if isinstance(self._data, JMList):
+			return self._data
+		if isinstance(self._data, JMValue):
+			if self._data._data is None:
+				return None
+		raise self._data._buildErrorTypeMismatch("list")
 	#
 
 	# --------------------------------------------------------------------------------------------------------------------------------
 
-	def vStrE(self) -> str:
-		if (self._data is None) or (self._data.__class__.__name__ != "JMValue"):
-			raise self._buildErrorTypeMismatch("string")
-		if isinstance(self._data._data, str):
-			return self._data._data
-		raise self._buildErrorTypeMismatch("string")
+	def vStrE(self,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> str:
+		if isinstance(self._data, JMValue):
+			return self._data.vStrE(*constraints)
+		raise self._data._buildErrorTypeMismatch("string")
 	#
 
-	def vStrN(self) -> typing.Union[str,None]:
-		if (self._data is None) or (self._data.__class__.__name__ != "JMValue"):
-			raise self._buildErrorTypeMismatch("string")
-		if self._data._data is None:
-			return None
-		if isinstance(self._data._data, str):
-			return self._data._data
-		raise self._buildErrorTypeMismatch("string")
-	#
-
-	# --------------------------------------------------------------------------------------------------------------------------------
-
-	def vIntE(self) -> int:
-		if (self._data is None) or (self._data.__class__.__name__ != "JMValue"):
-			raise self._buildErrorTypeMismatch("integer")
-		if isinstance(self._data._data, int):
-			return self._data._data
-		raise self._buildErrorTypeMismatch("integer")
-	#
-
-	def vIntN(self) -> typing.Union[int,None]:
-		if (self._data is None) or (self._data.__class__.__name__ != "JMValue"):
-			raise self._buildErrorTypeMismatch("integer")
-		if self._data._data is None:
-			return None
-		if isinstance(self._data._data, int):
-			return self._data._data
-		raise self._buildErrorTypeMismatch("integer")
+	def vStrN(self,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> typing.Union[str,None]:
+		if isinstance(self._data, JMValue):
+			return self._data.vStrN(*constraints)
+		raise self._data._buildErrorTypeMismatch("string")
 	#
 
 	# --------------------------------------------------------------------------------------------------------------------------------
 
-	def vFloatE(self) -> float:
-		if (self._data is None) or (self._data.__class__.__name__ != "JMValue"):
-			raise self._buildErrorTypeMismatch("float")
-		if isinstance(self._data._data, float):
-			return self._data._data
-		raise self._buildErrorTypeMismatch("float")
+	def vIntE(self,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> int:
+		if isinstance(self._data, JMValue):
+			return self._data.vIntE(*constraints)
+		raise self._data._buildErrorTypeMismatch("integer")
 	#
 
-	def vFloatN(self) -> typing.Union[float,None]:
-		if (self._data is None) or (self._data.__class__.__name__ != "JMValue"):
-			raise self._buildErrorTypeMismatch("float")
-		if self._data._data is None:
-			return None
-		if isinstance(self._data._data, float):
-			return self._data._data
-		raise self._buildErrorTypeMismatch("float")
+	def vIntN(self,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> typing.Union[int,None]:
+		if isinstance(self._data, JMValue):
+			return self._data.vIntN(*constraints)
+		raise self._data._buildErrorTypeMismatch("integer")
+	#
+
+	# --------------------------------------------------------------------------------------------------------------------------------
+
+	def vFloatE(self,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> float:
+		if isinstance(self._data, JMValue):
+			return self._data.vFloatE(*constraints)
+		raise self._data._buildErrorTypeMismatch("float")
+	#
+
+	def vFloatN(self,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> typing.Union[float,None]:
+		if isinstance(self._data, JMValue):
+			return self._data.vFloatN(*constraints)
+		raise self._data._buildErrorTypeMismatch("float")
+	#
+
+	# --------------------------------------------------------------------------------------------------------------------------------
+
+	def vNumericE(self,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> typing.Union[float,int]:
+		if isinstance(self._data, JMValue):
+			return self._data.vNumericE(*constraints)
+		raise self._data._buildErrorTypeMismatch("numeric")
+	#
+
+	def vNumericN(self,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> typing.Union[float,int,None]:
+		if isinstance(self._data, JMValue):
+			return self._data.vNumericN(*constraints)
+		raise self._data._buildErrorTypeMismatch("numeric")
 	#
 
 	# --------------------------------------------------------------------------------------------------------------------------------
 
 	def vBoolE(self) -> bool:
-		if (self._data is None) or (self._data.__class__.__name__ != "JMValue"):
-			raise self._buildErrorTypeMismatch("boolean")
-		if isinstance(self._data._data, bool):
-			return self._data._data
-		raise self._buildErrorTypeMismatch("boolean")
+		if isinstance(self._data, JMValue):
+			if isinstance(self._data._data, bool):
+				return self._data._data
+		raise self._data._buildErrorTypeMismatch("boolean")
 	#
 
 	def vBoolN(self) -> typing.Union[bool,None]:
-		if (self._data is None) or (self._data.__class__.__name__ != "JMValue"):
-			raise self._buildErrorTypeMismatch("boolean")
-		if self._data._data is None:
-			return None
-		if isinstance(self._data._data, bool):
-			return self._data._data
-		raise self._buildErrorTypeMismatch("boolean")
+		if isinstance(self._data, JMValue):
+			if self._data._data is None:
+				return None
+			if isinstance(self._data._data, bool):
+				return self._data._data
+		raise self._data._buildErrorTypeMismatch("boolean")
 	#
 
 	# --------------------------------------------------------------------------------------------------------------------------------
 
 	def vPrimitiveE(self) -> typing.Union[bool,int,float,str]:
-		if (self._data is None) or (self._data.__class__.__name__ != "JMValue"):
-			raise self._buildErrorTypeMismatch("primitive")
-		if isinstance(self._data._data, (int,float,str,bool)):
-			return self._data._data
-		raise self._buildErrorTypeMismatch("primitive")
+		if isinstance(self._data, JMValue):
+			if isinstance(self._data._data, (int,float,str,bool)):
+				return self._data._data
+		raise self._data._buildErrorTypeMismatch("primitive")
 	#
 
 	def vPrimitiveN(self) -> typing.Union[bool,int,float,str,None]:
-		if (self._data is None) or (self._data.__class__.__name__ != "JMValue"):
-			raise self._buildErrorTypeMismatch("primitive")
-		if self._data._data is None:
-			return None
-		if isinstance(self._data._data, (int,float,str,bool)):
-			return self._data._data
-		raise self._buildErrorTypeMismatch("primitive")
+		if isinstance(self._data, JMValue):
+			if self._data._data is None:
+				return None
+			if isinstance(self._data._data, (int,float,str,bool)):
+				return self._data._data
+		raise self._data._buildErrorTypeMismatch("primitive")
 	#
 
 	# --------------------------------------------------------------------------------------------------------------------------------
 
 	def vValueE(self) -> JMValue:
-		if (self._data is None) or (self._data.__class__.__name__ != "JMValue"):
-			raise self._buildErrorTypeMismatch("value")
-		return self._data
+		if isinstance(self._data, JMValue):
+			return self._data
+		raise self._data._buildErrorTypeMismatch("value")
 	#
 
 	def vValueN(self) -> typing.Union[JMValue,None]:
-		if (self._data is None) or (self._data.__class__.__name__ != "JMValue"):
-			raise self._buildErrorTypeMismatch("value")
-		if self._data._data is None:
-			return None
-		return self._data
+		if isinstance(self._data, JMValue):
+			if self._data._data is None:
+				return None
+			return self._data
+		raise self._data._buildErrorTypeMismatch("value")
 	#
 
 #
@@ -469,22 +631,17 @@ class JMList(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 	#
 	def __init__(self,
 			location:JMLocation,
-			data:list,
+			data:typing.List[AbstractJMElement],
 		):
 
-		self._location = location
+		super().__init__(location)
 
-		self._data = data
+		self._data:typing.List[AbstractJMElement] = data
 	#
 
 	################################################################################################################################
 	## Public Properties
 	################################################################################################################################
-
-	@property
-	def location(self) -> JMLocation:
-		return self._location
-	#
 
 	@property
 	def data(self):
@@ -500,37 +657,6 @@ class JMList(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 			"location",
 			"data",
 		]
-	#
-
-	def _buildErrorTypeMismatch(self, typeStr:str) -> Exception:
-		if typeStr[0] in "aeiou":
-			typeStr = "an " + typeStr
-		else:
-			typeStr = "a " + typeStr
-
-		return Exception("Expecting value at {} to be {} ({}:{}:{})".format(
-			repr(self._location.jsonPath),
-			typeStr,
-			self._location.sourceID,
-			self._location.lineNo,
-			self._location.charPos
-		))
-	#
-
-	def _buildErrorTypeMismatchIndexed(self, i:int, typeStr:str) -> Exception:
-		if typeStr[0] in "aeiou":
-			typeStr = "an " + typeStr
-		else:
-			typeStr = "a " + typeStr
-
-		return Exception("Expecting value at {}[{}] to be {} ({}:{}:{})".format(
-			repr(self._location.jsonPath),
-			i,
-			typeStr,
-			self._location.sourceID,
-			self._location.lineNo,
-			self._location.charPos
-		))
 	#
 
 	################################################################################################################################
@@ -588,20 +714,138 @@ class JMList(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 
 	# --------------------------------------------------------------------------------------------------------------------------------
 
-	def toStrList(self, bAllowNull:bool = False) -> typing.List[str]:
+	def toStrList(self,
+			*constraints:typing.Tuple[AbstractConstraint],
+			bAllowNullValues:bool = False,
+		) -> typing.List[typing.Union[str,None]]:
 		ret = []
-		if bAllowNull:
+		mRetrieveValue = JMValue.vStrN if bAllowNullValues else JMValue.vStrE
+		if constraints:
+			constraints = _packConstraints(constraints)
 			for i, v in enumerate(self._data):
 				if isinstance(v, JMValue):
-					ret.append(v.vStrN())
+					x = mRetrieveValue(v)
+					if x is not None:
+						errMsg = constraints(x)
+						if errMsg:
+							raise v._buildConstraintViolationIndexed(i, errMsg)
+					ret.append(x)
 				else:
-					raise self._buildErrorTypeMismatchIndexed(i, "str")
+					raise v._buildErrorTypeMismatchIndexed(i, "string")
 		else:
 			for i, v in enumerate(self._data):
 				if isinstance(v, JMValue):
-					ret.append(v.vStrE())
+					ret.append(mRetrieveValue(v))
 				else:
-					raise self._buildErrorTypeMismatchIndexed(i, "str")
+					raise v._buildErrorTypeMismatchIndexed(i, "string")
+		return ret
+	#
+
+	def toIntList(self,
+			*constraints:typing.Tuple[AbstractConstraint],
+			bAllowNullValues:bool = False,
+		) -> typing.List[typing.Union[int,None]]:
+		ret = []
+		mRetrieveValue = JMValue.vIntN if bAllowNullValues else JMValue.vIntE
+		if constraints:
+			constraints = _packConstraints(constraints)
+			for i, v in enumerate(self._data):
+				if isinstance(v, JMValue):
+					x = mRetrieveValue(v)
+					if x is not None:
+						errMsg = constraints(x)
+						if errMsg:
+							raise v._buildConstraintViolationIndexed(i, errMsg)
+					ret.append(x)
+				else:
+					raise v._buildErrorTypeMismatchIndexed(i, "integer")
+		else:
+			for i, v in enumerate(self._data):
+				if isinstance(v, JMValue):
+					ret.append(mRetrieveValue(v))
+				else:
+					raise v._buildErrorTypeMismatchIndexed(i, "integer")
+		return ret
+	#
+
+	def toFloatList(self,
+			*constraints:typing.Tuple[AbstractConstraint],
+			bAllowNullValues:bool = False,
+		) -> typing.List[typing.Union[float,None]]:
+		ret = []
+		mRetrieveValue = JMValue.vFloatN if bAllowNullValues else JMValue.vFloatE
+		if constraints:
+			constraints = _packConstraints(constraints)
+			for i, v in enumerate(self._data):
+				if isinstance(v, JMValue):
+					x = mRetrieveValue(v)
+					if x is not None:
+						errMsg = constraints(x)
+						if errMsg:
+							raise v._buildConstraintViolationIndexed(i, errMsg)
+					ret.append(x)
+				else:
+					raise v._buildErrorTypeMismatchIndexed(i, "float")
+		else:
+			for i, v in enumerate(self._data):
+				if isinstance(v, JMValue):
+					ret.append(mRetrieveValue(v))
+				else:
+					raise v._buildErrorTypeMismatchIndexed(i, "float")
+		return ret
+	#
+
+	def toNumericList(self,
+			*constraints:typing.Tuple[AbstractConstraint],
+			bAllowNullValues:bool = False,
+		) -> typing.List[typing.Union[float,int,None]]:
+		ret = []
+		mRetrieveValue = JMValue.vNumericN if bAllowNullValues else JMValue.vNumericE
+		if constraints:
+			constraints = _packConstraints(constraints)
+			for i, v in enumerate(self._data):
+				if isinstance(v, JMValue):
+					x = mRetrieveValue(v)
+					if x is not None:
+						errMsg = constraints(x)
+						if errMsg:
+							raise v._buildConstraintViolationIndexed(i, errMsg)
+					ret.append(x)
+				else:
+					raise v._buildErrorTypeMismatchIndexed(i, "numeric")
+		else:
+			for i, v in enumerate(self._data):
+				if isinstance(v, JMValue):
+					ret.append(mRetrieveValue(v))
+				else:
+					raise v._buildErrorTypeMismatchIndexed(i, "numeric")
+		return ret
+	#
+
+	def toPrimitiveList(self,
+			*constraints:typing.Tuple[AbstractConstraint],
+			bAllowNullValues:bool = False,
+		) -> typing.List[typing.Union[str,float,int,bool,None]]:
+		ret = []
+		mRetrieveValue = JMValue.vPimitiveN if bAllowNullValues else JMValue.vPimitiveE
+		if constraints:
+			constraints = _packConstraints(constraints)
+			for i, v in enumerate(self._data):
+				if isinstance(v, JMValue):
+					x = mRetrieveValue(v)
+					if x is not None:
+						errMsg = constraints(x)
+						if errMsg:
+							raise v._buildConstraintViolationIndexed(i, errMsg)
+					ret.append(x)
+				else:
+					raise v._buildErrorTypeMismatchIndexed(i, "primitive")
+		else:
+			for i, v in enumerate(self._data):
+				if isinstance(v, JMValue):
+					ret.append(mRetrieveValue(v))
+				else:
+					raise v._buildErrorTypeMismatchIndexed(i, "primitive")
 		return ret
 	#
 
@@ -620,10 +864,11 @@ class JMDict(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 	#
 	def __init__(self,
 			location:JMLocation,
-			data:dict,
+			data:typing.Dict[str,_JMProperty],
 		):
 
-		self._location = location
+		super().__init__(location)
+		assert isinstance(data, dict)
 
 		self._data:typing.Dict[str,_JMProperty] = data
 	#
@@ -631,11 +876,6 @@ class JMDict(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 	################################################################################################################################
 	## Public Properties
 	################################################################################################################################
-
-	@property
-	def location(self) -> JMLocation:
-		return self._location
-	#
 
 	@property
 	def data(self):
@@ -651,31 +891,6 @@ class JMDict(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 			"location",
 			"data",
 		]
-	#
-
-	def _buildErrorMissingKey(self, key:str) -> Exception:
-		return Exception("Expecting key {} at {} ({}:{}:{})".format(
-			repr(key),
-			self._location.jsonPath,
-			self._location.sourceID,
-			self._location.lineNo,
-			self._location.charPos
-		))
-	#
-
-	def _buildErrorTypeMismatch(self, typeStr:str) -> Exception:
-		if typeStr[0] in "aeiou":
-			typeStr = "an " + typeStr
-		else:
-			typeStr = "a " + typeStr
-
-		return Exception("Expecting value at {} to be {} ({}:{}:{})".format(
-			repr(self._location.jsonPath),
-			typeStr,
-			self._location.sourceID,
-			self._location.lineNo,
-			self._location.charPos
-		))
 	#
 
 	################################################################################################################################
@@ -835,7 +1050,6 @@ class JMDict(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 
 		if key in self._data:
 			prop = self._data[key]
-			assert isinstance(prop, _JMProperty)
 			return prop.vDictN()
 		return None
 	#
@@ -864,67 +1078,79 @@ class JMDict(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 
 	################################################################################################################################
 
-	def getStrE(self, key:str) -> str:
+	def getStrE(self, key:str,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> str:
 		if not isinstance(key, str):
 			raise TypeError("A specified key is of type {} but it must be of type 'str'!".format(type(key)))
 
 		if key in self._data:
 			prop = self._data[key]
-			return prop.vStrE()
+			return prop.vStrE(*constraints)
 		raise self._buildErrorMissingKey(key)
 	#
 
-	def getStrN(self, key:str) -> typing.Union[str,None]:
+	def getStrN(self, key:str,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> typing.Union[str,None]:
 		if not isinstance(key, str):
 			raise TypeError("A specified key is of type {} but it must be of type 'str'!".format(type(key)))
 
 		if key in self._data:
 			prop = self._data[key]
-			return prop.vStrN()			# there is a key but its value might be null
+			return prop.vStrN(*constraints)			# there is a key but its value might be null
 		return None						# no such key
 	#
 
 	# --------------------------------------------------------------------------------------------------------------------------------
 
-	def getIntE(self, key:str) -> int:
+	def getIntE(self, key:str,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> int:
 		if not isinstance(key, str):
 			raise TypeError("A specified key is of type {} but it must be of type 'str'!".format(type(key)))
 
 		if key in self._data:
 			prop = self._data[key]
-			return prop.vIntE()
+			return prop.vIntE(*constraints)
 		raise self._buildErrorMissingKey(key)
 	#
 
-	def getIntN(self, key:str) -> typing.Union[int,None]:
+	def getIntN(self, key:str,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> typing.Union[int,None]:
 		if not isinstance(key, str):
 			raise TypeError("A specified key is of type {} but it must be of type 'str'!".format(type(key)))
 
 		if key in self._data:
 			prop = self._data[key]
-			return prop.vIntN()			# there is a key but its value might be null
+			return prop.vIntN(*constraints)			# there is a key but its value might be null
 		return None						# no such key
 	#
 
 	# --------------------------------------------------------------------------------------------------------------------------------
 
-	def getFloatE(self, key:str) -> float:
+	def getFloatE(self, key:str,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> float:
 		if not isinstance(key, str):
 			raise TypeError("A specified key is of type {} but it must be of type 'str'!".format(type(key)))
 
 		if key in self._data:
 			prop = self._data[key]
-			return prop.vFloatE()
+			return prop.vFloatE(*constraints)
 		raise self._buildErrorMissingKey(key)
 	#
 
-	def getFloatN(self, key:str) -> typing.Union[float,None]:
+	def getFloatN(self, key:str,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> typing.Union[float,None]:
 		if not isinstance(key, str):
 			raise TypeError("A specified key is of type {} but it must be of type 'str'!".format(type(key)))
 
 		if key in self._data:
 			prop = self._data[key]
-			return prop.vFloatN()		# there is a key but its value might be null
+			return prop.vFloatN(*constraints)		# there is a key but its value might be null
 		return None						# no such key
 	#
 
@@ -974,6 +1200,32 @@ class JMDict(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 
 	# --------------------------------------------------------------------------------------------------------------------------------
 
+	def getNumericE(self, key:str,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> typing.Union[int,float]:
+		if not isinstance(key, str):
+			raise TypeError("A specified key is of type {} but it must be of type 'str'!".format(type(key)))
+
+		if key in self._data:
+			prop = self._data[key]
+			return prop.vNumericE(*constraints)
+		raise self._buildErrorMissingKey(key)
+	#
+
+	def getNumericN(self, key:str,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> typing.Union[int,float,None]:
+		if not isinstance(key, str):
+			raise TypeError("A specified key is of type {} but it must be of type 'str'!".format(type(key)))
+
+		if key in self._data:
+			prop = self._data[key]
+			return prop.vNumericN(*constraints)			# there is a key but its value might be null
+		return None							# no such key
+	#
+
+	# --------------------------------------------------------------------------------------------------------------------------------
+
 	def getValueE(self, key:str) -> JMValue:
 		if not isinstance(key, str):
 			raise TypeError("A specified key is of type {} but it must be of type 'str'!".format(type(key)))
@@ -982,6 +1234,16 @@ class JMDict(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 			prop = self._data[key]
 			return prop.vValueE()
 		raise self._buildErrorMissingKey(key)
+	#
+
+	def getValueN(self, key:str) -> typing.Union[JMValue,None]:
+		if not isinstance(key, str):
+			raise TypeError("A specified key is of type {} but it must be of type 'str'!".format(type(key)))
+
+		if key in self._data:
+			prop = self._data[key]
+			return prop.vValueE()
+		return None
 	#
 
 #

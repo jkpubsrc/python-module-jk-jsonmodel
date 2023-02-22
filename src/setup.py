@@ -19,7 +19,7 @@ setup(
 	author = "Jürgen Knauth",
 	author_email = "pubsrc@binary-overflow.de",
 	classifiers = [
-		"Development Status :: 5 - Production/Stable",
+		"Development Status :: 3 - Alpha",
 		"License :: OSI Approved :: Apache Software License",
 		"Programming Language :: Python :: 3",
 	],
@@ -45,7 +45,7 @@ setup(
 	],
 	scripts = [
 	],
-	version = '0.2023.2.20',
+	version = '0.2023.2.22',
 	zip_safe = False,
 	long_description = readme(),
 	long_description_content_type = "text/markdown",

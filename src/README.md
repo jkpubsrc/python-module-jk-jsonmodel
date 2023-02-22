@@ -32,7 +32,19 @@ A preliminary note. This python module `jk_jsonmodel` is designed to assist in p
 
 Please note that in respect to performance this JSON parser will be more expensive than the python's classic JSON parser. If you require a maximum of performance this python module is definitively not what you want to use. But if you require a maximum of simplicity of your code and a maximum of development speed, this python module might be the module of your choice.
 
-Please also note that the API of this module is not yet stable. It might still change slightly in the future.
+State of development
+----------------------
+
+**It is not recommended to use this module in production yet. This module is still under development. The API may still change significantly.**
+
+There are several development goals that are in conflict with each other:
+
+* convenient API
+* modular design
+* viable performance
+
+Some of the approaches currently taken could still change significantly. This could lead to an equally significant change in the API.
+The first stable release is to be expected somewhere in Q2 2023.
 
 Installation
 ----------------------
@@ -161,6 +173,26 @@ This is done by passing the `JMDict` instance to the constructor method of `Cont
 constructor method has been designed specifically in the way of processing the raw data.
 
 The result is an initialized `ContactDataRecord` object with nested subobjects of type `PhoneNumerRecord` and `BirthdayRecord`.
+
+### What if something is wrong?
+
+Now let's asume that there is something wrong with the data. We might find a `float` value instead of an `int` here:
+
+```JSON
+"birthday": {
+	"month": 5.0,
+	"day": 23
+},
+```
+
+In this case the parser will emit the following error message:
+
+> Exception: Expecting value at 'birthday.month' to be an integer (somedata.json:4:3)
+
+TODO: Verify checks. If null raise apropriate exception. If not null raise exception with appropriate location.
+TODO: Note all keys not retrieved. Implement two methods:
+	* getSuperfluousKeys()
+	* errorOnSuperfluousKeys(ignoreKeys:typing.Set[str])
 
 ### Pretty print the instantiated data model (using jk_prettyprintobj)
 
