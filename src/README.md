@@ -4,7 +4,7 @@ jk_jsonmodel
 Introduction
 ------------
 
-This python module provides a special parser for JSON files. This parser produces and a special JSON based data model that keeps each model value associated with location information. The purpose of this procedure is to simplify instantiation of objects derived from the original JSON data while providing useful error messages if something is wrong.
+This python module provides a special parser for JSON files that produces a data model where each value is associated with the location it originated from in the source file. The purpose of this is to simplify instantiation of objects derived from the original JSON data while providing useful error messages if something is wrong.
 
 Information about this module can be found here:
 
