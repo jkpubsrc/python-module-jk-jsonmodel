@@ -1080,6 +1080,7 @@ class JMDict(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 
 	def getStrE(self, key:str,
 			*constraints:typing.Tuple[AbstractConstraint],
+			defaultValue:typing.Union[str,None] = None,
 		) -> str:
 		if not isinstance(key, str):
 			raise TypeError("A specified key is of type {} but it must be of type 'str'!".format(type(key)))
@@ -1087,6 +1088,9 @@ class JMDict(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 		if key in self._data:
 			prop = self._data[key]
 			return prop.vStrE(*constraints)
+		if defaultValue is not None:
+			assert isinstance(defaultValue, str)
+			return defaultValue
 		raise self._buildErrorMissingKey(key)
 	#
 
@@ -1106,6 +1110,7 @@ class JMDict(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 
 	def getIntE(self, key:str,
 			*constraints:typing.Tuple[AbstractConstraint],
+			defaultValue:typing.Union[int,None] = None,
 		) -> int:
 		if not isinstance(key, str):
 			raise TypeError("A specified key is of type {} but it must be of type 'str'!".format(type(key)))
@@ -1113,6 +1118,9 @@ class JMDict(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 		if key in self._data:
 			prop = self._data[key]
 			return prop.vIntE(*constraints)
+		if defaultValue is not None:
+			assert isinstance(defaultValue, int)
+			return defaultValue
 		raise self._buildErrorMissingKey(key)
 	#
 
@@ -1132,6 +1140,7 @@ class JMDict(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 
 	def getFloatE(self, key:str,
 			*constraints:typing.Tuple[AbstractConstraint],
+			defaultValue:typing.Union[int,float,None] = None,
 		) -> float:
 		if not isinstance(key, str):
 			raise TypeError("A specified key is of type {} but it must be of type 'str'!".format(type(key)))
@@ -1139,6 +1148,9 @@ class JMDict(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 		if key in self._data:
 			prop = self._data[key]
 			return prop.vFloatE(*constraints)
+		if defaultValue is not None:
+			assert isinstance(defaultValue, (int,float))
+			return float(defaultValue)
 		raise self._buildErrorMissingKey(key)
 	#
 
@@ -1156,13 +1168,16 @@ class JMDict(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 
 	# --------------------------------------------------------------------------------------------------------------------------------
 
-	def getBoolE(self, key:str) -> bool:
+	def getBoolE(self, key:str, defaultValue:typing.Union[bool,None] = None) -> bool:
 		if not isinstance(key, str):
 			raise TypeError("A specified key is of type {} but it must be of type 'str'!".format(type(key)))
 
 		if key in self._data:
 			prop = self._data[key]
 			return prop.vBoolE()
+		if defaultValue is not None:
+			assert isinstance(defaultValue, bool)
+			return defaultValue
 		raise self._buildErrorMissingKey(key)
 	#
 
@@ -1178,13 +1193,16 @@ class JMDict(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 
 	# --------------------------------------------------------------------------------------------------------------------------------
 
-	def getPrimitiveE(self, key:str) -> typing.Union[str,int,float,bool]:
+	def getPrimitiveE(self, key:str, defaultValue:typing.Union[str,int,float,bool,None] = None) -> typing.Union[str,int,float,bool]:
 		if not isinstance(key, str):
 			raise TypeError("A specified key is of type {} but it must be of type 'str'!".format(type(key)))
 
 		if key in self._data:
 			prop = self._data[key]
 			return prop.vPrimitiveE()
+		if defaultValue is not None:
+			assert isinstance(defaultValue, (str,int,float,bool))
+			return defaultValue
 		raise self._buildErrorMissingKey(key)
 	#
 
@@ -1202,6 +1220,7 @@ class JMDict(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 
 	def getNumericE(self, key:str,
 			*constraints:typing.Tuple[AbstractConstraint],
+			defaultValue:typing.Union[int,float,None] = None,
 		) -> typing.Union[int,float]:
 		if not isinstance(key, str):
 			raise TypeError("A specified key is of type {} but it must be of type 'str'!".format(type(key)))
@@ -1209,6 +1228,9 @@ class JMDict(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 		if key in self._data:
 			prop = self._data[key]
 			return prop.vNumericE(*constraints)
+		if defaultValue is not None:
+			assert isinstance(defaultValue, (int,float))
+			return defaultValue
 		raise self._buildErrorMissingKey(key)
 	#
 

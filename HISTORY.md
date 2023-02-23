@@ -8,3 +8,6 @@
 	* Added: Documentation
 	* Added: Constraints
 
+* 2023-02-22
+	* Added: More constraints
+
