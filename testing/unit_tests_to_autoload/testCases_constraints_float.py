@@ -17,26 +17,26 @@ DATA = jk_jsonmodel.loadModelFromStr("""{
 
 @TestCase()
 def test_minValue_1(ctx:TestContext):
-	v = DATA.getFloatE("aFloat", jk_jsonmodel.minValue(1))
+	v = DATA.getFloatE("aFloat", jk_jsonmodel.constraints.minValue(1))
 #
 
 @TestCase(
 	RaisesException(Exception),
 )
 def test_minValue_1e(ctx:TestContext):
-	v = DATA.getFloatE("aFloat", jk_jsonmodel.minValue(12345))
+	v = DATA.getFloatE("aFloat", jk_jsonmodel.constraints.minValue(12345))
 #
 
 @TestCase()
 def test_maxValue_1(ctx:TestContext):
-	v = DATA.getFloatE("aFloat", jk_jsonmodel.maxValue(12345))
+	v = DATA.getFloatE("aFloat", jk_jsonmodel.constraints.maxValue(12345))
 #
 
 @TestCase(
 	RaisesException(Exception),
 )
 def test_maxValue_1e(ctx:TestContext):
-	v = DATA.getFloatE("aFloat", jk_jsonmodel.maxValue(1))
+	v = DATA.getFloatE("aFloat", jk_jsonmodel.constraints.maxValue(1))
 #
 
 

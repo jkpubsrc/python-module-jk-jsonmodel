@@ -12,8 +12,9 @@ from jk_testing import *
 
 with jk_logging.wrapMain() as log:
 
+	temp = []
+	TestCaseFileLoader.loadTestsFromDirectory("unit_tests_to_autoload", collection=temp, log=log)
 	testCaseCollection = TestCaseCollection2()
-	testCaseCollection.loadTestsFromDirectory("unit_tests_to_autoload", log=log)
 	#testCaseCollection.dump()
 
 	#orderedTestCaseCollection = OrderedTestCaseCollection.buildFromCollection(testCaseCollection)

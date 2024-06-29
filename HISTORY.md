@@ -22,3 +22,6 @@
 * 2024-02-03
 	* Renamed: loadModel(..) to loadModelFromStr(..)
 	* Added: loadListModelFromStr(..), loadDictModelFromStr(..), loadModelFromBytes(..), loadListModelFromBytes(..), loadDictModelFromBytes(..)
+
+* 2024-06-29:
+	* Upgraded: unit tests

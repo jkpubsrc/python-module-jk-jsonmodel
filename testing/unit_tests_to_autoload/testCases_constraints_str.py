@@ -17,38 +17,38 @@ DATA = jk_jsonmodel.loadModelFromStr("""{
 
 @TestCase()
 def test_minLength_1(ctx:TestContext):
-	v = DATA.getStrE("aStr", jk_jsonmodel.minLength(1))
+	v = DATA.getStrE("aStr", jk_jsonmodel.constraints.minLength(1))
 #
 
 @TestCase(
 	RaisesException(Exception),
 )
 def test_minLength_1e(ctx:TestContext):
-	v = DATA.getStrE("aStr", jk_jsonmodel.minLength(123))
+	v = DATA.getStrE("aStr", jk_jsonmodel.constraints.minLength(123))
 #
 
 @TestCase()
 def test_maxLength_1(ctx:TestContext):
-	v = DATA.getStrE("aStr", jk_jsonmodel.maxLength(123))
+	v = DATA.getStrE("aStr", jk_jsonmodel.constraints.maxLength(123))
 #
 
 @TestCase(
 	RaisesException(Exception),
 )
 def test_maxLength_1e(ctx:TestContext):
-	v = DATA.getStrE("aStr", jk_jsonmodel.maxLength(1))
+	v = DATA.getStrE("aStr", jk_jsonmodel.constraints.maxLength(1))
 #
 
 @TestCase()
 def test_regex_1(ctx:TestContext):
-	v = DATA.getStrE("aStr", jk_jsonmodel.matchRegEx("a.+"))
+	v = DATA.getStrE("aStr", jk_jsonmodel.constraints.matchRegEx("a.+"))
 #
 
 @TestCase(
 	RaisesException(Exception),
 )
 def test_regex_1e(ctx:TestContext):
-	v = DATA.getStrE("aStr", jk_jsonmodel.matchRegEx("x.+"))
+	v = DATA.getStrE("aStr", jk_jsonmodel.constraints.matchRegEx("x.+"))
 #
 
 

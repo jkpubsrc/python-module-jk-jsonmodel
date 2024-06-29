@@ -20,6 +20,7 @@ from .JsonParserRelaxedModel import JsonParserRelaxedModel as _JsonParserRelaxed
 from .AbstractConstraint import AbstractConstraint
 from .jclasses import AbstractJMElement, JMDict, JMValue, JMList
 from . import constraints
+from .JMRetriever import JMRetriever
 
 
 

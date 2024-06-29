@@ -6,7 +6,6 @@
 import jk_logging
 
 import jk_jsonmodel
-from jk_jsonmodel import isNone, isNotNone, isPrimitive, isDict, isList, IMyDict, IMyList, IMyValue
 
 
 
@@ -36,12 +35,15 @@ with jk_logging.wrapMain() as log:
 		_f = jFoo.getFloatE("baz")
 		assert isinstance(_f, float)
 
-	with jRaw.getDictN("xxxxxx") as jFoo:
-		if jFoo is not None:
-			_y = jFoo.getBoolE("yyyyyy")
-			raise Exception("This code line should not be executed!")
+	# with jRaw.getDictN("xxxxxx") as jFoo:
+	# 	if jFoo is not None:
+	# 		_y = jFoo.getBoolE("yyyyyy")
+	# 		raise Exception("This code line should not be executed!")
 
 	_x = jRaw.getDictE("foo").getListN("fooList")
-	assert isinstance(_x, IMyList)
+	assert isinstance(_x, jk_jsonmodel.JMList)
+
+	_x = jRaw.getDictE("foo").getListN("xxxxxxxx")
+	assert _x is None
 
 
