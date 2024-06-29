@@ -16,7 +16,7 @@ _strDATA = """{
 		"bar": 456,
 	},
 }"""
-DATA = jk_jsonmodel.loadModel(_strDATA)
+DATA = jk_jsonmodel.loadModelFromStr(_strDATA)
 # DATA.dump()
 
 _strDATA2 = """{
@@ -25,7 +25,7 @@ _strDATA2 = """{
 	"aStr": "abc",
 }"""
 DATA2json = jk_json.loads(_strDATA2)
-DATA2 = jk_jsonmodel.loadModel(_strDATA2)
+DATA2 = jk_jsonmodel.loadModelFromStr(_strDATA2)
 # DATA2.dump()
 
 

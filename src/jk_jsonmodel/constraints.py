@@ -2,6 +2,7 @@
 
 __all__ = (
 	"minValue", "maxValue", "valueIn", "minLength", "maxLength",
+	"minSize", "maxSize",
 	"matchRegEx", "tcpPort", "absPOSIXPath", "absWindowsPath",
 	"ipAddress", "ip4Address", "ip6Address", "hostNameOrIP4Address", "hostNameOrIP6Address", "hostNameOrIPAddress", "hostName",
 )
@@ -19,6 +20,9 @@ from .AbstractConstraint import AbstractConstraint
 
 ################################################################################################################################
 
+#
+# apply to: int, float
+#
 class _MinValue(AbstractConstraint):
 
 	def __init__(self, value) -> None:
@@ -33,8 +37,11 @@ class _MinValue(AbstractConstraint):
 
 #
 
-################################################################################################################################
+# --------------------------------------------------------------------------------------------------------------------------------
 
+#
+# apply to: int, float
+#
 class _MaxValue(AbstractConstraint):
 
 	def __init__(self, value) -> None:
@@ -51,6 +58,9 @@ class _MaxValue(AbstractConstraint):
 
 ################################################################################################################################
 
+#
+# apply to: str, int, float, bool
+#
 class _ValueIn(AbstractConstraint):
 
 	def __init__(self, values) -> None:
@@ -67,6 +77,9 @@ class _ValueIn(AbstractConstraint):
 
 ################################################################################################################################
 
+#
+# apply to: str
+#
 class _MinLength(AbstractConstraint):
 
 	def __init__(self, value) -> None:
@@ -81,8 +94,11 @@ class _MinLength(AbstractConstraint):
 
 #
 
-################################################################################################################################
+# --------------------------------------------------------------------------------------------------------------------------------
 
+#
+# apply to: str
+#
 class _MaxLength(AbstractConstraint):
 
 	def __init__(self, value) -> None:
@@ -97,8 +113,11 @@ class _MaxLength(AbstractConstraint):
 
 #
 
-################################################################################################################################
+# --------------------------------------------------------------------------------------------------------------------------------
 
+#
+# apply to: str
+#
 class _MatchesRegEx(AbstractConstraint):
 
 	def __init__(self, regExPatternStr:str) -> None:
@@ -117,6 +136,44 @@ class _MatchesRegEx(AbstractConstraint):
 
 ################################################################################################################################
 
+#
+# apply to: JMDict, JMList
+#
+class _MinSize(AbstractConstraint):
+
+	def __init__(self, value) -> None:
+		self.__value = value
+	#
+
+	def __call__(self, value) -> typing.Union[str,None]:
+		if len(value) >= self.__value:
+			return None
+		return "size >= {}".format(repr(self.__value))
+	#
+
+#
+
+# --------------------------------------------------------------------------------------------------------------------------------
+
+#
+# apply to: JMDict, JMList
+#
+class _MaxSize(AbstractConstraint):
+
+	def __init__(self, value) -> None:
+		self.__value = value
+	#
+
+	def __call__(self, value) -> typing.Union[str,None]:
+		if len(value) <= self.__value:
+			return None
+		return "size <= {}".format(repr(self.__value))
+	#
+
+#
+
+################################################################################################################################
+
 class _ValidTCPPort(AbstractConstraint):
 
 	def __call__(self, value) -> typing.Union[str,None]:
@@ -127,7 +184,6 @@ class _ValidTCPPort(AbstractConstraint):
 	#
 
 #
-
 
 ################################################################################################################################
 
@@ -149,7 +205,7 @@ class _AbsolutePOSIXPath(AbstractConstraint):
 
 #
 
-################################################################################################################################
+# --------------------------------------------------------------------------------------------------------------------------------
 
 class _AbsoluteWindowsPath(AbstractConstraint):
 
@@ -184,7 +240,7 @@ class _ValidIP4Address(AbstractConstraint):
 
 #
 
-################################################################################################################################
+# --------------------------------------------------------------------------------------------------------------------------------
 
 class _ValidIP6Address(AbstractConstraint):
 
@@ -242,6 +298,16 @@ class _Or(AbstractConstraint):
 
 
 
+def minSize(value:int) -> AbstractConstraint:
+	assert isinstance(value, int)
+	return _MinSize(value)
+#
+
+def maxSize(value:int) -> AbstractConstraint:
+	assert isinstance(value, int)
+	return _MaxSize(value)
+#
+
 def minValue(value:typing.Union[int,float]) -> AbstractConstraint:
 	assert isinstance(value, (int,float))
 	return _MinValue(value)
@@ -252,9 +318,15 @@ def maxValue(value:typing.Union[int,float]) -> AbstractConstraint:
 	return _MaxValue(value)
 #
 
-def valueIn(value:typing.Union[list,tuple]) -> AbstractConstraint:
-	assert isinstance(value, (list,tuple))
-	return _ValueIn(value)
+def valueIn(value:typing.Union[set,list,tuple,typing.Any], *args) -> AbstractConstraint:
+	if len(args) == 0:
+		if str(type(value)) == "<class 'dict_keys'>":
+			return _ValueIn(value)
+		assert isinstance(value, (set,list,tuple))
+		return _ValueIn(value)
+	else:
+		_values = [ value, *args ]
+		return _ValueIn(_values)
 #
 
 def minLength(value:int) -> AbstractConstraint:

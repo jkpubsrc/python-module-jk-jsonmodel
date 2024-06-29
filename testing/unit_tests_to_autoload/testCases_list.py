@@ -7,7 +7,7 @@ import jk_jsonmodel
 
 
 
-DATA = jk_jsonmodel.loadModel("""{
+DATA = jk_jsonmodel.loadModelFromStr("""{
 	"aNull": null,
 	"anEmptyList": [],
 	"anIntList": [ 123, 456 ],

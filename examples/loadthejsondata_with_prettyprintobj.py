@@ -77,6 +77,7 @@ class ContactDataRecord(jk_prettyprintobj.DumpMixin):
 
 
 jData = jk_jsonmodel.loadDictModelFromFile("somedata.json")
+jData.dump()
 theModel = ContactDataRecord(jData)
 theModel.dump()
 

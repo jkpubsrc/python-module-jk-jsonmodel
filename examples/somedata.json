@@ -2,7 +2,7 @@
 	"name": "John",
 	"surename": "Doe",
 	"birthday": {
-		"month": 5,
+		"month": 5.0,
 		"day": 23
 	},
 	"phoneNumbers": {

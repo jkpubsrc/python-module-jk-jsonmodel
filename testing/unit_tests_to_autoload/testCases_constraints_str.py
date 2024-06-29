@@ -8,7 +8,7 @@ import jk_jsonmodel
 
 
 
-DATA = jk_jsonmodel.loadModel("""{
+DATA = jk_jsonmodel.loadModelFromStr("""{
 	"aStr": "abc",
 }""")
 

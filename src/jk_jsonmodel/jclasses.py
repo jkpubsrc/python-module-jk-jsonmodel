@@ -120,6 +120,13 @@ class AbstractJMElement(jk_prettyprintobj.DumpMixin):
 		))
 	#
 
+	def fail(self):
+		raise Exception("Can't process data at {} ({})".format(
+			self._location.jsonPath,
+			str(self._location),
+		))
+	#
+
 	################################################################################################################################
 	## Public Methods
 	################################################################################################################################
@@ -187,12 +194,16 @@ class JMValue(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 
 	def __str__(self) -> str:
 		s = repr(self._data)
-		return self.__class__.__name__ + "<(" + s[1:-1] + ")>"
+		if s.startswith("'") or s.startswith("\""):
+			s = s[1:-1]
+		return self.__class__.__name__ + "<(" + s + ")>"
 	#
 
 	def __repr__(self) -> str:
 		s = repr(self._data)
-		return self.__class__.__name__ + "<(" + s[1:-1] + ")>"
+		if s.startswith("'") or s.startswith("\""):
+			s = s[1:-1]
+		return self.__class__.__name__ + "<(" + s + ")>"
 	#
 
 	def ensureIsDictE(self):
@@ -203,9 +214,39 @@ class JMValue(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 		raise self._buildErrorTypeMismatch("list")
 	#
 
-	def ensureIsValueE(self):
+	def ensureIsValueE(self) -> JMValue:
 		return self
 	#
+
+	# def ensureIsValueStrE(self) -> JMValue:
+	# 	if not isinstance(self._data, str):
+	# 		raise self._buildErrorTypeMismatch("str")
+	# 	return self
+	# #
+
+	# def ensureIsValueBoolE(self) -> JMValue:
+	# 	if not isinstance(self._data, bool):
+	# 		raise self._buildErrorTypeMismatch("bool")
+	# 	return self
+	# #
+
+	# def ensureIsValueIntE(self) -> JMValue:
+	# 	if not isinstance(self._data, int):
+	# 		raise self._buildErrorTypeMismatch("int")
+	# 	return self
+	# #
+
+	# def ensureIsValueIntOrFloatE(self) -> JMValue:
+	# 	if not isinstance(self._data, (int,float)):
+	# 		raise self._buildErrorTypeMismatch("int,float")
+	# 	return self
+	# #
+
+	# def ensureIsValueFloatE(self) -> JMValue:
+	# 	if not isinstance(self._data, float):
+	# 		raise self._buildErrorTypeMismatch("float")
+	# 	return self
+	# #
 
 	# --------------------------------------------------------------------------------------------------------------------------------
 
@@ -459,14 +500,20 @@ class _JMProperty(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 	## Public Methods
 	################################################################################################################################
 
-	def vDictE(self) -> JMDict:
+	def vDictE(self,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> JMDict:
 		if isinstance(self._data, JMDict):
+			self._data._checkConstraints(*constraints)
 			return self._data
 		raise self._data._buildErrorTypeMismatch("object")
 	#
 
-	def vDictN(self) -> typing.Union[JMDict,None]:
+	def vDictN(self,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> typing.Union[JMDict,None]:
 		if isinstance(self._data, JMDict):
+			self._data._checkConstraints(*constraints)
 			return self._data
 		if isinstance(self._data, JMValue):
 			if self._data._data is None:
@@ -476,14 +523,20 @@ class _JMProperty(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 
 	# --------------------------------------------------------------------------------------------------------------------------------
 
-	def vListE(self) -> typing.Union[JMList,None]:
+	def vListE(self,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> typing.Union[JMList,None]:
 		if isinstance(self._data, JMList):
+			self._data._checkConstraints(*constraints)
 			return self._data
 		raise self._data._buildErrorTypeMismatch("list")
 	#
 
-	def vListN(self) -> typing.Union[JMList,None]:
+	def vListN(self,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> typing.Union[JMList,None]:
 		if isinstance(self._data, JMList):
+			self._data._checkConstraints(*constraints)
 			return self._data
 		if isinstance(self._data, JMValue):
 			if self._data._data is None:
@@ -714,6 +767,21 @@ class JMList(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 
 	# --------------------------------------------------------------------------------------------------------------------------------
 
+	def _checkConstraints(self,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> None:
+		if self._data is None:
+			raise self._buildErrorTypeMismatch("list")
+		if constraints:
+			constraints = _packConstraints(constraints)
+		if constraints:
+			errMsg = constraints(self._data)
+			if errMsg:
+				raise self._buildConstraintViolation(errMsg)
+	#
+
+	# --------------------------------------------------------------------------------------------------------------------------------
+
 	def toStrList(self,
 			*constraints:typing.Tuple[AbstractConstraint],
 			bAllowNullValues:bool = False,
@@ -846,6 +914,23 @@ class JMList(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 					ret.append(mRetrieveValue(v))
 				else:
 					raise v._buildErrorTypeMismatchIndexed(i, "primitive")
+		return ret
+	#
+
+	def toDictList(self,
+			bAllowNullValues:bool = False,
+		) -> typing.List[typing.Union[JMDict,None]]:
+		ret = []
+		for i, v in enumerate(self._data):
+			if bAllowNullValues:
+				if v is None:
+					ret.append(None)
+					continue
+			else:
+				if isinstance(v, JMDict):
+					ret.append(v)
+				else:
+					raise v._buildErrorTypeMismatchIndexed(i, "object")
 		return ret
 	#
 
@@ -1027,42 +1112,77 @@ class JMDict(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 		v = self._data.get(key)
 		if v is None:
 			return False
-		if isinstance(v, JMValue):
-			return v._data is not None
+
+		assert isinstance(v, _JMProperty)
+
+		if v._data is None:
+			return False
+
+		if isinstance(v._data, JMValue):
+			return v._data._data is not None
+
 		return True
 	#
 
-	################################################################################################################################
+	# --------------------------------------------------------------------------------------------------------------------------------
 
-	def getDictE(self, key:str) -> JMDict:
+	def _checkConstraints(self,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> None:
+		if self._data is None:
+			raise self._buildErrorTypeMismatch("object")
+		if constraints:
+			constraints = _packConstraints(constraints)
+		if constraints:
+			errMsg = constraints(self._data)
+			if errMsg:
+				raise self._buildConstraintViolation(errMsg)
+	#
+
+	# --------------------------------------------------------------------------------------------------------------------------------
+
+	def getDictE(self, key:str,
+			*constraints:typing.Tuple[AbstractConstraint],
+			defaultValue:typing.Union[JMDict,None] = None,
+		) -> JMDict:
 		if not isinstance(key, str):
 			raise TypeError("A specified key is of type {} but it must be of type 'str'!".format(type(key)))
 
 		if key in self._data:
 			prop = self._data[key]
-			return prop.vDictE()
+			return prop.vDictE(*constraints)
+		if defaultValue is not None:
+			assert isinstance(defaultValue, JMDict)
+			return defaultValue
 		raise self._buildErrorMissingKey(key)
 	#
 
-	def getDictN(self, key:str) -> typing.Union[JMDict,None]:
+	def getDictN(self, key:str,
+			*constraints:typing.Tuple[AbstractConstraint],
+		) -> typing.Union[JMDict,None]:
 		if not isinstance(key, str):
 			raise TypeError("A specified key is of type {} but it must be of type 'str'!".format(type(key)))
 
 		if key in self._data:
 			prop = self._data[key]
-			return prop.vDictN()
+			return prop.vDictN(*constraints)
 		return None
 	#
 
 	################################################################################################################################
 
-	def getListE(self, key:str) -> JMList:
+	def getListE(self, key:str,
+			defaultValue:typing.Union[JMList,None] = None,
+		) -> JMList:
 		if not isinstance(key, str):
 			raise TypeError("A specified key is of type {} but it must be of type 'str'!".format(type(key)))
 
 		if key in self._data:
 			prop = self._data[key]
 			return prop.vListE()
+		if defaultValue is not None:
+			assert isinstance(defaultValue, JMList)
+			return defaultValue
 		raise self._buildErrorMissingKey(key)
 	#
 

@@ -7,7 +7,7 @@ import jk_jsonmodel
 
 
 
-DATA = jk_jsonmodel.loadModel("""{
+DATA = jk_jsonmodel.loadModelFromStr("""{
 	"aFloat": 1.234,
 	"anInt": 1234,
 	"aBool": true,

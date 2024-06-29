@@ -2,7 +2,7 @@
 
 
 __author__ = "Jürgen Knauth"
-__version__ = "0.2023.2.23"
+__version__ = "0.2024.3.13"
 
 
 
@@ -15,6 +15,7 @@ import jk_json
 
 
 
+from .JMLocation import JMLocation
 from .JsonParserRelaxedModel import JsonParserRelaxedModel as _JsonParserRelaxedModel
 from .AbstractConstraint import AbstractConstraint
 from .jclasses import AbstractJMElement, JMDict, JMValue, JMList
@@ -41,9 +42,10 @@ __parserRelaxedModel = _JsonParserRelaxedModel()
 #								are allowed and strings can be specified with single quotes and double quotes.
 #								Furthermore NaN, positive and negative infinitiy is supported.
 #
-def loadModel(
+def loadModelFromStr(
 		textToParse:str,
 		bDebugging:bool = False,
+		errPrintFunc = None,
 		allowDuplicatePropertyNames:bool = False,
 		sourceID:str = None,
 	) -> typing.Union[JMDict,JMList]:
@@ -64,8 +66,50 @@ def loadModel(
 	tokenizer = __tokenizerRelaxed
 	parser = __parserRelaxedModel
 
-	ret = parser.parse(tokenizer.tokenize(textToParse, sourceID), bDebugging, allowDuplicatePropertyNames)
+	if errPrintFunc and callable(errPrintFunc):
+		try:
+			ret = parser.parse(tokenizer.tokenize(textToParse, sourceID), bDebugging, allowDuplicatePropertyNames)
+		except jk_json.ParserErrorException as ee:
+			if sourceID:
+				s = sourceID if len(sourceID) < 40 else ("..." + sourceID[-40:])
+				prefix = "{}:{} ".format(s, ee.location.lineNo + 1)
+			else:
+				prefix = "<unknown-source> "
+			prefix = "{}:{} ".format(s, ee.location.lineNo + 1)
+			errPrintFunc(prefix + ee.textLine.replace("\t", " "))
+			errPrintFunc(" " * (len(prefix) + ee.location.charPos + 1) + "ᐃ")
+			errPrintFunc(" " * (len(prefix) + ee.location.charPos + 1 - 6) + "╌╌╍╍━━┛")
+			raise
+	else:
+		ret = parser.parse(tokenizer.tokenize(textToParse, sourceID), bDebugging, allowDuplicatePropertyNames)
+
 	assert isinstance(ret, (JMDict,JMList))
+	return ret
+#
+
+def loadListModelFromStr(
+		textToParse:str,
+		bDebugging:bool = False,
+		errPrintFunc = None,
+		allowDuplicatePropertyNames:bool = False,
+		sourceID:str = None,
+	) -> JMList:
+
+	ret = loadModelFromStr(textToParse, bDebugging, errPrintFunc, allowDuplicatePropertyNames, sourceID)
+	assert isinstance(ret, JMList)
+	return ret
+#
+
+def loadDictModelFromStr(
+		textToParse:str,
+		bDebugging:bool = False,
+		errPrintFunc = None,
+		allowDuplicatePropertyNames:bool = False,
+		sourceID:str = None,
+	) -> JMDict:
+
+	ret = loadModelFromStr(textToParse, bDebugging, errPrintFunc, allowDuplicatePropertyNames, sourceID)
+	assert isinstance(ret, JMDict)
 	return ret
 #
 
@@ -124,23 +168,7 @@ def loadModelFromFile(
 	if textData is None:
 		textData = rawData.decode(encoding)
 
-	if errPrintFunc and callable(errPrintFunc):
-		try:
-			return loadModel(textData, bDebugging = bDebugging, allowDuplicatePropertyNames = allowDuplicatePropertyNames)
-		except jk_json.ParserErrorException as ee:
-			s = filePath if len(filePath) < 40 else ("..." + filePath[-40:])
-			prefix = "{}:{} ".format(s, ee.location.lineNo + 1)
-			errPrintFunc(prefix + ee.textLine.replace("\t", " "))
-			errPrintFunc(" " * (len(prefix) + ee.location.charPos + 1) + "ᐃ")
-			errPrintFunc(" " * (len(prefix) + ee.location.charPos + 1 - 6) + "╌╌╍╍━━┛")
-			raise
-	else:
-		return loadModel(
-			textData,
-			bDebugging = bDebugging,
-			allowDuplicatePropertyNames = allowDuplicatePropertyNames,
-			sourceID = filePath,
-		)
+	return loadDictModelFromStr(textData, bDebugging, errPrintFunc, allowDuplicatePropertyNames, filePath)
 #
 
 def loadListModelFromFile(
@@ -170,4 +198,83 @@ def loadDictModelFromFile(
 	assert isinstance(ret, JMDict)
 	return ret
 #
+
+
+
+#
+# Deserialize a JSON string: Reconstruct a python data structure reading data from the specified BLOB.
+#
+# @param	bool bStrict		If ```True``` this parser sticks strictly to the JSON standard. If ```False``` C-style comments
+#								are allowed and strings can be specified with single quotes and double quotes.
+#								Furthermore NaN, positive and negative infinitiy is supported.
+#
+def loadModelFromBytes(
+		rawData:typing.Union[bytearray,bytes],
+		bDebugging:bool = False,
+		encoding:str = None,
+		autoDetectEncoding:bool = True,
+		errPrintFunc = None,
+		allowDuplicatePropertyNames:bool = False,
+		sourceID:str = None,
+	) -> typing.Union[JMDict,JMList]:
+
+	assert isinstance(rawData, (bytes,bytearray))
+	assert isinstance(bDebugging, bool)
+
+	# ----
+
+	textData = None
+
+	if encoding is None:
+		if autoDetectEncoding:
+			try:
+				if rawData.startswith(b"\xef\xbb\xbf"):		# utf-8 byte order mark
+					rawData = rawData[3:]
+
+				textData = rawData.decode("utf-8")
+
+			except:
+				encoding = chardet.detect(rawData)["encoding"]
+				if encoding is None:
+					encoding = "utf-8"
+
+		else:
+			encoding = "utf-8"
+
+	if textData is None:
+		textData = rawData.decode(encoding)
+
+	return loadDictModelFromStr(textData, bDebugging, errPrintFunc, allowDuplicatePropertyNames, sourceID)
+#
+
+def loadListModelFromBytes(
+		rawData:typing.Union[bytearray,bytes],
+		bDebugging:bool = False,
+		encoding:str = None,
+		autoDetectEncoding:bool = True,
+		errPrintFunc = None,
+		allowDuplicatePropertyNames:bool = False,
+		sourceID:str = None,
+	) -> JMList:
+
+	ret = loadModelFromBytes(rawData, bDebugging, encoding, autoDetectEncoding, errPrintFunc, allowDuplicatePropertyNames, sourceID)
+	assert isinstance(ret, JMList)
+	return ret
+#
+
+def loadDictModelFromBytes(
+		rawData:typing.Union[bytearray,bytes],
+		bDebugging:bool = False,
+		encoding:str = None,
+		autoDetectEncoding:bool = True,
+		errPrintFunc = None,
+		allowDuplicatePropertyNames:bool = False,
+		sourceID:str = None,
+	) -> JMDict:
+
+	ret = loadModelFromBytes(rawData, bDebugging, encoding, autoDetectEncoding, errPrintFunc, allowDuplicatePropertyNames, sourceID)
+	assert isinstance(ret, JMDict)
+	return ret
+#
+
 

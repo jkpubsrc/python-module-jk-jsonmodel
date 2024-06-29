@@ -11,3 +11,14 @@
 * 2023-02-22
 	* Added: More constraints
 
+* 2024-01-13
+	* Improved: valueIn(..)
+	* Fixed: hasNotNull(..)
+
+* 2024-02-03
+	* Added: default values to getDictE() and getListE()
+	* Added: constraint minSize(..), maxSize(..)
+
+* 2024-02-03
+	* Renamed: loadModel(..) to loadModelFromStr(..)
+	* Added: loadListModelFromStr(..), loadDictModelFromStr(..), loadModelFromBytes(..), loadListModelFromBytes(..), loadDictModelFromBytes(..)

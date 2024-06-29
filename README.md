@@ -28,9 +28,9 @@ Having these special JSON based data objects you now can this approach: As your 
 Limitations
 ----------------------
 
-A preliminary note. This python module `jk_jsonmodel` is designed to assist in parsing JSON data in a very good way. Howerver, it currently is *not* designed to do this in the most efficient way possible. When writing this module the focus was on convenience of use not on achieving the best JSON parsing performance possible. The latter would be a completely different goal.
+A preliminary note. This python module `jk_jsonmodel` is designed to assist in parsing JSON data for easy usage. However, the parser is currently is *not* designed to do this in the most efficient way possible. When writing this module the focus was on convenience of use not on achieving the best JSON parsing performance possible. The latter would be a completely different goal. That might be achieved at some other time.
 
-Please note that in respect to performance this JSON parser will be more expensive than the python's classic JSON parser. If you require a maximum of performance this python module is definitively not what you want to use. But if you require a maximum of simplicity of your code and a maximum of development speed, this python module might be the module of your choice.
+This means: In respect to performance this JSON parser will be more expensive than other parsers, e.g. the python's classic JSON parser. If you require maximum speed this python module is definitively not what you want to use. But if you require maximum simplicity of your code and a maximum of development speed, this python module might be your module of choice.
 
 State of development
 ----------------------

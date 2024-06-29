@@ -74,12 +74,14 @@ def _packConstraints(constraints:typing.Tuple[AbstractConstraint]) -> typing.Uni
 		return None
 
 	if len(constraints) == 1:
-		assert isinstance(constraints[0], AbstractConstraint)
+		if not isinstance(constraints[0], AbstractConstraint):
+			raise Exception("Not a constraint: " + str(constraints[0]))
 		return constraints[0]
 
 	ret = []
-	for c in constraints:
-		assert isinstance(c, AbstractConstraint)
+	for i, c in enumerate(constraints):
+		if not isinstance(c, AbstractConstraint):
+			raise Exception("Not a constraint at index {}: {}".format(i, str(c)))
 		ret.append(c)
 	return _ConstraintSequence(ret)
 #

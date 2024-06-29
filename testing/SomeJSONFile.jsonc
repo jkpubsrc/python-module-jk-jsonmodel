@@ -1,0 +1,19 @@
+{
+
+	"magic": {
+		"magic": "foo-bar",
+		"version": 1,
+	},
+
+	"foo": {
+		"bar": true,
+		"baz": 1.2345,
+		"fooList": [
+			"a",
+			"b",
+			"c",
+		],
+		"abc": "def",
+	},
+
+}
