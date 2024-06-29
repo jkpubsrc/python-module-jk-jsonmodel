@@ -15,7 +15,7 @@ with jk_logging.wrapMain() as log:
 	temp = []
 	TestCaseFileLoader.loadTestsFromDirectory("unit_tests_to_autoload", collection=temp, log=log)
 	testCaseCollection = TestCaseCollection2()
-	#testCaseCollection.dump()
+	testCaseCollection.appendAll(temp, log)
 
 	#orderedTestCaseCollection = OrderedTestCaseCollection.buildFromCollection(testCaseCollection)
 	#orderedTestCaseCollection.dump()

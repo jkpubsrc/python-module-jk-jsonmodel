@@ -21,7 +21,7 @@
 		"license": "Apache2",
 		"name": "jk_jsonmodel",
 		"packageClass": "python-module",
-		"version": "0.2024.3.13"
+		"version": "0.2024.6.29.1"
 	},
 	"requirements": {
 		"htmlcssjs_packages": [],

@@ -25,3 +25,5 @@
 
 * 2024-06-29:
 	* Upgraded: unit tests
+	* Added: JMRetriever
+
