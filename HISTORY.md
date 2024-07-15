@@ -27,3 +27,7 @@
 	* Upgraded: unit tests
 	* Added: JMRetriever
 
+* 2024-07-15:
+	* Added: JMMerger
+	* Added: toJSON()
+

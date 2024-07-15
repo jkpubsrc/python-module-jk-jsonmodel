@@ -131,6 +131,10 @@ class AbstractJMElement(jk_prettyprintobj.DumpMixin):
 	## Public Methods
 	################################################################################################################################
 
+	def toJSON(self):
+		raise NotImplementedError()
+	#
+
 	def ensureIsDictE(self) -> JMDict:
 		raise NotImplementedError()
 	#
@@ -192,6 +196,12 @@ class JMValue(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 	## Public Methods
 	################################################################################################################################
 
+	def toJSON(self):
+		return self._data
+	#
+
+	# --------------------------------------------------------------------------------------------------------------------------------
+
 	def __str__(self) -> str:
 		s = repr(self._data)
 		if s.startswith("'") or s.startswith("\""):
@@ -205,6 +215,9 @@ class JMValue(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 			s = s[1:-1]
 		return self.__class__.__name__ + "<(" + s + ")>"
 	#
+
+	# --------------------------------------------------------------------------------------------------------------------------------
+
 
 	def ensureIsDictE(self):
 		raise self._buildErrorTypeMismatch("object")
@@ -500,6 +513,12 @@ class _JMProperty(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 	## Public Methods
 	################################################################################################################################
 
+	def __str__(self):
+		return "_JMProperty<( {}={} @ {} )>".format(repr(self._key), repr(self._data), repr(self._location))
+	#
+
+	# --------------------------------------------------------------------------------------------------------------------------------
+
 	def vDictE(self,
 			*constraints:typing.Tuple[AbstractConstraint],
 		) -> JMDict:
@@ -716,6 +735,15 @@ class JMList(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 	## Public Methods
 	################################################################################################################################
 
+	def toJSON(self):
+		ret = []
+		for v in self._data:
+			ret.append(v.toJSON())
+		return ret
+	#
+
+	# --------------------------------------------------------------------------------------------------------------------------------
+
 	def __str__(self) -> str:
 		s = self._data.__str__()
 		return self.__class__.__name__ + "<(" + s[1:-1] + ")>"
@@ -725,6 +753,8 @@ class JMList(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 		s = self._data.__str__()
 		return self.__class__.__name__ + "<(" + s[1:-1] + ")>"
 	#
+
+	# --------------------------------------------------------------------------------------------------------------------------------
 
 	def ensureIsDictE(self) -> JMDict:
 		raise self._buildErrorTypeMismatch("object")
@@ -982,6 +1012,15 @@ class JMDict(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 	## Public Methods
 	################################################################################################################################
 
+	def toJSON(self):
+		ret = {}
+		for k, v in self._data.items():
+			ret[k] = v._data.toJSON()
+		return ret
+	#
+
+	# --------------------------------------------------------------------------------------------------------------------------------
+
 	def __str__(self) -> str:
 		s = {
 			k:v for k,v in self.itemsv()
@@ -995,6 +1034,8 @@ class JMDict(AbstractJMElement, jk_prettyprintobj.DumpMixin):
 		}.__str__()
 		return self.__class__.__name__ + "<(" + s[1:-1] + ")>"
 	#
+
+	# --------------------------------------------------------------------------------------------------------------------------------
 
 	def ensureIsDictE(self) -> JMDict:
 		return self

@@ -2,7 +2,7 @@
 
 
 __author__ = "Jürgen Knauth"
-__version__ = "0.2024.6.29.1"
+__version__ = "0.2024.7.15"
 
 
 
@@ -18,9 +18,10 @@ import jk_json
 from .JMLocation import JMLocation
 from .JsonParserRelaxedModel import JsonParserRelaxedModel as _JsonParserRelaxedModel
 from .AbstractConstraint import AbstractConstraint
-from .jclasses import AbstractJMElement, JMDict, JMValue, JMList
+from .jclasses import AbstractJMElement, JMDict, JMValue, JMList, _JMProperty
 from . import constraints
 from .JMRetriever import JMRetriever
+from .JMMerger import JMMerger
 
 
 

@@ -1,0 +1,18 @@
+{
+
+	"bar": false,
+	"baz": 2.345,
+	"abc": null,
+	"someOther": "aabbcc",
+	"someFooDict": {
+		"foo": "aabbcc",
+		"bar": null,
+	},
+	"someFooList": [
+		"x",
+		"y",
+	],
+	"otherFooList": null,
+	"otherFooDict": null,
+
+}

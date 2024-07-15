@@ -1,0 +1,25 @@
+{
+
+	"bar": true,
+	"baz": 1.2345,
+	"someFooList": [
+		"a",
+		"b",
+		"c",
+	],
+	"someFooDict": {
+		"foo": "bar",
+		"bar": 123,
+	},
+	"otherFooList": [
+		"a",
+		"b",
+		"c",
+	],
+	"otherFooDict": {
+		"foo": "bar",
+		"bar": 123,
+	},
+	"abc": "def",
+
+}
