@@ -31,3 +31,16 @@
 	* Added: JMMerger
 	* Added: toJSON()
 
+* 2025-09-14:
+	* Improved: Type hints
+
+* 2025-09-22:
+	* Fixed: Bug in constraint
+
+* 2026-01-01:
+	* Added: Allow specifying an error message with fail(..)
+
+* 2026-06-17:
+	* Improved: Better support for default values
+
+

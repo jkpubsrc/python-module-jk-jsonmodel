@@ -2,7 +2,7 @@
 
 
 __author__ = "Jürgen Knauth"
-__version__ = "0.2024.7.15"
+__version__ = "0.2026.5.17"
 
 
 

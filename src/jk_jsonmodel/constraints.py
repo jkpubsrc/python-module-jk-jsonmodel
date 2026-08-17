@@ -178,7 +178,7 @@ class _ValidTCPPort(AbstractConstraint):
 
 	def __call__(self, value) -> typing.Union[str,None]:
 		assert isinstance(value, int)
-		if 0 < len(value) <= 65535:
+		if 0 < value <= 65535:
 			return None
 		return "TCP port"
 	#
@@ -274,7 +274,7 @@ class _ValidHostName(AbstractConstraint):
 
 class _Or(AbstractConstraint):
 
-	def __init__(self, errMsg:str, *constraints:typing.Tuple[AbstractConstraint]) -> None:
+	def __init__(self, errMsg:str, *constraints:AbstractConstraint) -> None:
 		assert isinstance(errMsg, str)
 		self.__errMsg = errMsg
 		self.__constraints = constraints
